@@ -1,0 +1,162 @@
+<html>
+  <head>
+    <title>my chat app</title>
+  </head>
+
+  <style>
+    *{
+      margin: 0;
+    }
+
+    #joinDiv{
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      background: rgba(50, 50, 50, 200);
+    z-index: 999;
+  }
+    #joinBox{
+    width: 100%;
+    text-align: center;
+    margin-top: 45vh;
+    }
+
+    #appDiv{
+    width: 100%;
+    height: 100%;
+    display: -webkit-flex; /* Safari */
+    display: flex;
+    }
+    #userlist{
+      border: 1px solid black;
+      -webkit-flex: 1;  /* Safari 6.1+ */
+      -ms-flex: 1;  /* IE 10 */    
+      flex: 1;
+    }
+    #chatarea{
+      border: 1px solid black;
+      -webkit-flex: 4;  /* Safari 6.1+ */
+      -ms-flex: 4;  /* IE 10 */    
+      flex: 4;
+      position: relative;
+    }
+    #sendMessageDiv{
+      height:50px;
+      border: 1px solid black;
+      bottom:0;
+      position: absolute;
+      width: calc(100% - 2px);
+    }
+
+  </style>
+
+  <body>
+  
+
+  <div id="joinDiv">
+      <div id='joinBox'>
+      <input id='myId' type="text" size="35"  placeholder="enter a name" ></input>
+      <input type="button"value="Join" onclick="connectToSocket()"></input>
+      <br>
+      <p id='joinError' style="color:red;"></p>
+    </div>
+  </div>
+
+
+
+  
+  <div id='appDiv'>
+      <div id='userlist'>
+          <ul id='userListUL'>
+
+          </ul>
+      </div>
+      <div id='chatarea'>
+          <p id='server-time'>'Server time: </p>
+          <hr>
+          <div id='chatlog'></div>
+
+          <div id='sendMessageDiv'>
+              <input size="35" id="message" style="width: calc(100% - 60px);height: 100%;font-size: 18px;"></input>
+              <input type="button" value='send' onclick="sendMessage()" style='float: right;height: 100%;width: 60px;'></input>
+            </div>
+      </div>
+  </div>
+
+
+
+
+
+
+  </body>
+</html>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+var socket = io('http://localhost:3000');
+var connected = false;
+var uid="";
+var joinDiv = document.getElementById('joinDiv');
+var el = document.getElementById('server-time');
+var userlist = document.getElementById('userListUL');
+var sendMessageDiv = document.getElementById('sendMessageDiv');
+var message = document.getElementById('message');
+var chatlog = document.getElementById('chatlog');
+
+function connectToSocket(){
+  uid = document.getElementById('myId').value.trim();
+  if(uid.length<5) {
+    document.getElementById('joinError').innerHTML = 'Username should be at least 5 letters!';
+    return;
+  }
+
+  socket.emit('userjoin',uid, function(data){
+    if(data){
+      connected=true;
+      joinDiv.remove();
+    }
+    else{
+      document.getElementById('joinError').innerHTML = 'Username already taken!';
+    }
+  });
+
+
+  socket.on('time', function(timeString) {
+    el.innerHTML = 'Server time: ' + timeString;
+  });  
+
+  socket.on('usernames', function(data) {
+    userlist.innerHTML='';
+    for(var i=0; i<data.length;i++){
+      auser = document.createElement('li');
+      auser.innerHTML = data[i];
+      userlist.appendChild(auser);
+    }
+  });      
+
+  socket.on('sendMessage', function(data) {
+    console.log(data);
+    var newmsg = document.createElement("p");
+    newmsg.innerHTML = data.uid+ ": "+data.msg;
+    chatlog.appendChild(newmsg);
+  });
+}
+
+function sendMessage(){
+  if(message.value.length==0 || !connected) return;
+    var m = new Object();
+    m.uid = uid;
+    m.msg = message.value;
+
+    socket.emit('sendMessage',m);
+
+    var newmsg = document.createElement("p");
+    newmsg.innerHTML = "me: "+message.value;
+    chatlog.appendChild(newmsg);
+
+    message.value="";
+}
+
+
+</script>
