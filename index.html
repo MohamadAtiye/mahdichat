@@ -1,7 +1,12 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>my chat app</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>My Mega Chat</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
   </head>
+
 
   <style>
     *{
@@ -16,48 +21,111 @@
       width: 100%;
       position: fixed;
       background: rgba(50, 50, 50, 200);
-    z-index: 999;
-  }
+      z-index: 999;
+    }
     #joinBox{
-    width: 100%;
-    text-align: center;
-    margin-top: 45vh;
+      width: 100%;
+      text-align: center;
+      margin-top: 45vh;
     }
 
     #appDiv{
       max-width: 1004px;
-    height: 100%;
-    /* display: -webkit-flex; */
-    display: flex;
-    margin: auto;
-    background: white;
+      height: 99vh;
+      display: block;
+      margin: auto;
+      background: white;
+      min-height: 600px;
     }
-    #userlist{
+
+
+    @media only screen and (min-width: 799px) {
+      
+      #userlist{
       border: 1px solid black;
-      -webkit-flex: 1;  /* Safari 6.1+ */
-      -ms-flex: 1;  /* IE 10 */    
-      flex: 1;
-      max-width: 200px;
+
+      width: 200px;
+      float: left;
+
+      height: 100%;
+      min-height: 600px;
+
+      overflow: auto;
     }
+
     #chatarea{
       border: 1px solid black;
-    -webkit-flex: 4;
-    -ms-flex: 4;
-    flex: 4;
-    position: relative;
-    max-width: 800px;
+      width: calc(100% - 204px);
+      position: relative;
+      float: right;
+      min-height: 600px;
+      height: 100%;
     }
+
+    }
+
+    @media only screen and (max-width: 799px) {
+      #userlist{
+      border: 1px solid black;
+
+      width: 200px;
+      float: left;
+
+      height: 100%;
+      min-height: 600px;
+
+      overflow: auto;
+      display: none;
+    }
+
+    #chatarea{
+      border: 1px solid black;
+      width: 99%;
+      position: relative;
+      min-height: 600px;
+      height: 100%;
+    }
+
+
+    }
+
+
+
+    #userlist ul{
+      text-decoration: none;
+      padding: 0;
+      margin: 5px;
+    }
+
     #sendMessageDiv{
-      height:50px;
+      /* height:50px; */
       border: 1px solid black;
       bottom:0;
       position: absolute;
       width: calc(100% - 2px);
     }
+    #sendMessageBtn{
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      height: 29px;
+      width: 60px;
+    }
+    #message{
+      width: calc(100% - 65px);
+      /* height: 100%; */
+      font-size: 20px;
+    }
 
+
+    #chatlog{
+      overflow-y: scroll;
+      height: calc(100% - 51px);
+    }
     .message{
       display: block;
-      width: 95%; 
+      width: 90%;
+      margin: auto; 
       transition: all .5s;
       padding: 15px;
     }
@@ -71,7 +139,6 @@
 
       border-radius: 25px;
       padding: 10px 20px;
-      margin-left: 13px;
       position: relative;
 
       word-wrap: break-word;
@@ -153,7 +220,7 @@
 
   <div id="joinDiv">
       <div id='joinBox'>
-      <input id='myId' type="text" size="35"  placeholder="enter a name" ></input>
+      <input id='myId' type="text" size="35" maxlength="20"   placeholder="enter a name" ></input>
       <input id='myIdBtn' type="button"value="Join"></input>
       <br>
       <p id='joinError' style="color:red;"></p>
@@ -169,14 +236,15 @@
 
           </ul>
       </div>
+
       <div id='chatarea'>
           <p id='server-time'>'Server time: </p>
           <hr>
           <div id='chatlog'></div>
 
           <div id='sendMessageDiv'>
-              <input maxlength="200" size="35" id="message" style="width: calc(100% - 60px);height: 100%;font-size: 18px;"></input>
-              <input type="button" id="sendMessageBtn" value='send' style='float: right;height: 100%;width: 60px;'></input>
+              <input maxlength="200" size="35" id="message"></input>
+              <input type="button" id="sendMessageBtn" value='send'></input>
             </div>
       </div>
   </div>
@@ -272,6 +340,9 @@ function connectToSocket(){
     newFromThem.appendChild(newmsgText);
     newMSG.appendChild(newFromThem);
     chatlog.appendChild(newMSG);
+
+    $('#chatlog').animate({
+               scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
   });
 
 
@@ -321,21 +392,13 @@ function sendMessage(){
         newMSG.appendChild(newFromThem);
         chatlog.appendChild(newMSG);
 
+        $('#chatlog').animate({
+               scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
 
-
-
-        // var newmsg = document.createElement("p");
-        // newmsg.innerHTML = "me: "+message.value;
-        // chatlog.appendChild(newmsg);
-
-        
-        // var newmsg = document.createElement("p");
-        // newmsg.innerHTML = "me: "+message.value;
-        // chatlog.appendChild(newmsg);
         message.value="";
       }
       else{
-        alert("massage should be maximum 200 characters");
+        alert("server refused message");
       }
 
     });
