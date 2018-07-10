@@ -78,7 +78,7 @@
 
           <div id='sendMessageDiv'>
               <input size="35" id="message" style="width: calc(100% - 60px);height: 100%;font-size: 18px;"></input>
-              <input type="button" value='send' onclick="sendMessage()" style='float: right;height: 100%;width: 60px;'></input>
+              <input type="button" id="sendMessageBtn" value='send' style='float: right;height: 100%;width: 60px;'></input>
             </div>
       </div>
   </div>
@@ -95,7 +95,7 @@
 <script>
 
 //var socket = io('http://localhost:3000');
-  var socket = io('https://mahdichat.herokuapp.com/');
+var socket = io('https://mahdichat.herokuapp.com/');
 var connected = false;
 var uid="";
 var joinDiv = document.getElementById('joinDiv');
@@ -104,6 +104,7 @@ var userlist = document.getElementById('userListUL');
 var sendMessageDiv = document.getElementById('sendMessageDiv');
 var message = document.getElementById('message');
 var chatlog = document.getElementById('chatlog');
+var sendMessageBtn = document.getElementById("sendMessageBtn");
 
 function connectToSocket(){
   uid = document.getElementById('myId').value.trim();
@@ -142,6 +143,21 @@ function connectToSocket(){
     newmsg.innerHTML = data.uid+ ": "+data.msg;
     chatlog.appendChild(newmsg);
   });
+
+
+  message.addEventListener("keyup",function(event){
+    event.preventDefault();
+    if(event.keyCode===13){
+      sendMessage();
+    }
+  });
+  sendMessageBtn.addEventListener("click",function(event){
+    event.preventDefault();
+      sendMessage();
+      message.focus();
+  });
+  
+  message.focus();
 }
 
 function sendMessage(){
