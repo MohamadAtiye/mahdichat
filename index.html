@@ -39,51 +39,112 @@
       display: block;
       margin: auto;
       background: white;
+      overflow: hidden;
+      position: relative;
     }
 
 
     @media only screen and (min-width: 799px) {
       
       #userlist{
-      border: 1px solid black;
-      width: 200px;
-      float: left;
-      height: 100%;
-      overflow: auto;
-    }
+        border: 1px solid black;
+        width: 200px;
+        float: left;
+        height: 100%;
+        overflow: auto;
 
-    #chatarea{
-      border: 1px solid black;
-      width: calc(100% - 204px);
-      position: relative;
-      float: right;
-      height: 100%;
-    }
+        position: absolute;
+        left:0;
+        -webkit-transition: all 1s; /* Safari */
+        transition: all 1s;
+
+        background: white;
+        z-index: 5;
+      }
+
+      #chatarea{
+        border: 1px solid black;
+        width: calc(100% - 204px);
+        position: absolute;
+
+        height: 100%;
+        right: 0;
+        -webkit-transition: all 1s; /* Safari */
+        transition: all 1s;
+      }
+
+          /* .hiddenChatChat{
+            width:100% !important;
+          }
+          .hiddenChatUsers{
+            left:-201px !important;
+          } */
+
+.hideUserlist_chat{
+  width:100% !important;
+}
+.hideUserlist_Users{
+  left:-201px !important;
+}
 
     }
 
     @media only screen and (max-width: 799px) {
       #userlist{
+        border: 1px solid black;
+        width: 200px;
+        height: 100%;
+        overflow: auto;
+        transition: 1s;
+        position: absolute;
+        left: -200px;
+        
+        background: white;
+        z-index: 5;
+        -webkit-transition: all 1s; /* Safari */
+        transition: all 1s;
+      }
+
+      #chatarea{
+        border: 1px solid black;
+        width: 100%;
+        position: relative;
+        left:0;
+        
+        height: 100%;
+        -webkit-transition: all 1s; /* Safari */
+        transition: all 1s;
+      }
+      /* .hiddenChatMobileShow{
+        left:0px !important;
+      }
+    .hiddenChatChatMobileMove{
+      left: 200px;
+    } */
+
+    .hideUserlist_chat{
+      left:200px !important;
+    }
+    .hideUserlist_Users{
+      left: 0px !important;
+    }
+    }
+
+
+
+
+
+
+    #showhidelist{
+      position: absolute;
+      left: 0;
+      top:0;
+      height:30px;
+      width:30px;
+      font-size: 22px;
       border: 1px solid black;
-
-      width: 200px;
-      float: left;
-
-      height: 100%;
-      overflow: auto;
-      display: none;
+      cursor: pointer;
     }
-
-    #chatarea{
-      border: 1px solid black;
-      width: 99%;
-      position: relative;
-      height: 100%;
-    }
-
-
-    }
-
 
 
     #userlist ul{
@@ -233,7 +294,9 @@
       </div>
 
       <div id='chatarea'>
-          <div id="chatInfo" style="text-align: center;border: 1px solid black;">
+          
+          <div id="chatInfo" style="text-align: center;border: 1px solid black;height:30px;">
+              <div id="showhidelist">&#9776</div>  
               <p id='server-time'>Users Online</p>
           </div>
 
@@ -264,11 +327,15 @@ var uid="";
 var uidBox = document.getElementById('myId');
 var joinDiv = document.getElementById('joinDiv');
 var el = document.getElementById('server-time');
+var usersDiv = document.getElementById("userlist");
 var userlist = document.getElementById('userListUL');
+
+var chatarea = document.getElementById("chatarea");
 var sendMessageDiv = document.getElementById('sendMessageDiv');
 var message = document.getElementById('message');
 var chatlog = document.getElementById('chatlog');
 var sendMessageBtn = document.getElementById("sendMessageBtn");
+var showhidelist = document.getElementById("showhidelist");
 
 var myApp = (function() {
   uidBox.focus();
@@ -355,6 +422,19 @@ function connectToSocket(){
     event.preventDefault();
       sendMessage();
       message.focus();
+  });
+
+  showhidelist.addEventListener("click",function(event){
+
+      if(usersDiv.classList.contains("hideUserlist_Users")){
+        usersDiv.classList.remove("hideUserlist_Users");
+        chatarea.classList.remove("hideUserlist_chat");
+      }
+      else{
+        usersDiv.classList.add("hideUserlist_Users");
+        chatarea.classList.add("hideUserlist_chat");
+      }
+
   });
   
   message.focus();
