@@ -7,6 +7,9 @@
     *{
       margin: 0;
     }
+    body{
+      background: rgba(50, 50, 50, 200);
+    }
 
     #joinDiv{
       height: 100%;
@@ -22,23 +25,27 @@
     }
 
     #appDiv{
-    width: 100%;
+      max-width: 1004px;
     height: 100%;
-    display: -webkit-flex; /* Safari */
+    /* display: -webkit-flex; */
     display: flex;
+    margin: auto;
+    background: white;
     }
     #userlist{
       border: 1px solid black;
       -webkit-flex: 1;  /* Safari 6.1+ */
       -ms-flex: 1;  /* IE 10 */    
       flex: 1;
+      max-width: 200px;
     }
     #chatarea{
       border: 1px solid black;
-      -webkit-flex: 4;  /* Safari 6.1+ */
-      -ms-flex: 4;  /* IE 10 */    
-      flex: 4;
-      position: relative;
+    -webkit-flex: 4;
+    -ms-flex: 4;
+    flex: 4;
+    position: relative;
+    max-width: 800px;
     }
     #sendMessageDiv{
       height:50px;
@@ -46,6 +53,97 @@
       bottom:0;
       position: absolute;
       width: calc(100% - 2px);
+    }
+
+    .message{
+      display: block;
+      width: 95%; 
+      transition: all .5s;
+      padding: 15px;
+    }
+    .fromthem{
+      max-width: 50%;
+
+      background: #E5E5EA;
+      color: black;
+      float: left;
+      clear: both;
+
+      border-radius: 25px;
+      padding: 10px 20px;
+      margin-left: 13px;
+      position: relative;
+
+      word-wrap: break-word;
+      margin-bottom: 20px;
+      font: 400 15px 'Open Sans', sans-serif;
+    }
+    .fromthem::before{
+      content: "";
+      position: absolute;
+      z-index: 2;
+      bottom: -2px;
+      left: -7px;
+      height: 19px;
+      border-left: 20px solid #E5E5EA;
+      border-bottom-right-radius: 16px 14px;
+      -webkit-transform: translate(0, -2px);
+      transform: translate(0, -2px);
+    }
+    .fromthem::after{
+      content: "";
+      position: absolute;
+      z-index: 3;
+      bottom: -2px;
+      left: 4px;
+      width: 26px;
+      height: 20px;
+      background: white;
+      border-bottom-right-radius: 10px;
+      -webkit-transform: translate(-30px, -2px);
+      transform: translate(-30px, -2px);
+    }
+
+    .fromme{
+      max-width: 50%;
+
+    background:green;
+    color: white;
+    float: right;
+    clear: both;
+
+    border-radius: 25px;
+    padding: 10px 20px;
+    position: relative;
+
+    word-wrap: break-word;
+    margin-bottom: 20px;
+    font: 400 15px 'Open Sans', sans-serif;
+    }
+    .fromme::before{
+      content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: -2px;
+    right: -8px;
+    height: 19px;
+    border-right: 20px solid green;
+    border-bottom-left-radius: 16px 14px;
+    -webkit-transform: translate(0, -2px);
+    transform: translate(0, -2px);
+    }
+    .fromme::after{
+      content: "";
+      position: absolute;
+      z-index: 1;
+      bottom: -2px;
+      right: -42px;
+      width: 12px;
+      height: 20px;
+      background: white;
+      border-bottom-left-radius: 10px;
+      -webkit-transform: translate(-30px, -2px);
+      transform: translate(-30px, -2px);
     }
 
   </style>
@@ -77,7 +175,7 @@
           <div id='chatlog'></div>
 
           <div id='sendMessageDiv'>
-              <input size="35" id="message" style="width: calc(100% - 60px);height: 100%;font-size: 18px;"></input>
+              <input maxlength="200" size="35" id="message" style="width: calc(100% - 60px);height: 100%;font-size: 18px;"></input>
               <input type="button" id="sendMessageBtn" value='send' style='float: right;height: 100%;width: 60px;'></input>
             </div>
       </div>
@@ -131,6 +229,7 @@ function connectToSocket(){
   uid = uidBox.value.trim();
   if(uid.length<5 || uid.length > 20) {
     document.getElementById('joinError').innerHTML = 'Username should be at between 5 and 20 characters!';
+    uidBox.focus();
     return;
   }
 
@@ -160,9 +259,19 @@ function connectToSocket(){
 
   socket.on('sendMessage', function(data) {
     console.log(data);
-    var newmsg = document.createElement("p");
-    newmsg.innerHTML = data.uid+ ": "+data.msg;
-    chatlog.appendChild(newmsg);
+
+    var newMSG = document.createElement('div');
+    newMSG.className = "message";
+
+    var newFromThem = document.createElement("div");
+    newFromThem.className = "fromthem";
+
+    var newmsgText = document.createElement("p");
+    newmsgText.innerHTML = data.uid+ "<hr>"+data.msg;
+
+    newFromThem.appendChild(newmsgText);
+    newMSG.appendChild(newFromThem);
+    chatlog.appendChild(newMSG);
   });
 
 
@@ -182,7 +291,10 @@ function connectToSocket(){
 }
 
 function sendMessage(){
-  if(message.value.length==0 || message.value.length>200 || !connected) 
+  if(message.value.length==0) return;
+
+
+  if(message.value.length>200 || !connected) 
   {
         alert("massage should be maximum 200 characters");
         return;
@@ -195,9 +307,31 @@ function sendMessage(){
 
     socket.emit('sendMessage',m,function(data){
       if(data){
-        var newmsg = document.createElement("p");
-        newmsg.innerHTML = "me: "+message.value;
-        chatlog.appendChild(newmsg);
+
+        var newMSG = document.createElement('div');
+        newMSG.className = "message";
+
+        var newFromThem = document.createElement("div");
+        newFromThem.className = "fromme";
+
+        var newmsgText = document.createElement("p");
+        newmsgText.innerHTML = "me: <hr>"+message.value;
+
+        newFromThem.appendChild(newmsgText);
+        newMSG.appendChild(newFromThem);
+        chatlog.appendChild(newMSG);
+
+
+
+
+        // var newmsg = document.createElement("p");
+        // newmsg.innerHTML = "me: "+message.value;
+        // chatlog.appendChild(newmsg);
+
+        
+        // var newmsg = document.createElement("p");
+        // newmsg.innerHTML = "me: "+message.value;
+        // chatlog.appendChild(newmsg);
         message.value="";
       }
       else{
