@@ -56,7 +56,7 @@
   <div id="joinDiv">
       <div id='joinBox'>
       <input id='myId' type="text" size="35"  placeholder="enter a name" ></input>
-      <input type="button"value="Join" onclick="connectToSocket()"></input>
+      <input id='myIdBtn' type="button"value="Join"></input>
       <br>
       <p id='joinError' style="color:red;"></p>
     </div>
@@ -107,7 +107,7 @@ var message = document.getElementById('message');
 var chatlog = document.getElementById('chatlog');
 var sendMessageBtn = document.getElementById("sendMessageBtn");
 
-(function() {
+var myApp = (function() {
   uidBox.focus();
 
   uidBox.addEventListener("keyup",function(event){
@@ -115,6 +115,11 @@ var sendMessageBtn = document.getElementById("sendMessageBtn");
   if(event.keyCode===13){
     connectToSocket()
   }
+  });
+
+  myIdBtn.addEventListener("click",function(event){
+    event.preventDefault();
+      connectToSocket()
   });
 
 
