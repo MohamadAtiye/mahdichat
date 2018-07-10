@@ -28,7 +28,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('userjoin', (data,callback)=>{
-    if(currentUsers.indexOf(data)!= -1 || data.length < 5)
+    if(currentUsers.indexOf(data)!= -1 || data.length < 5 || data.length > 20)
     {
       callback(false);
     }
@@ -40,11 +40,15 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('sendMessage',(data) => {
+  socket.on('sendMessage',(data,callback) => {
     console.log("got message");
-    if(data.uid == socket.nickname && data.msg.length>0)
+    if(data.uid == socket.nickname && data.msg.length>0 && data.msg.length<201){
+      callback(true);
       socket.broadcast.emit('sendMessage',data);
-    else console.log('fake user');
+    }
+    else {
+      console.log('fake user');
+    }
   });
 });
 

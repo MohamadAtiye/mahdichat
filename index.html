@@ -94,10 +94,11 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-//var socket = io('http://localhost:3000');
-var socket = io('https://mahdichat.herokuapp.com/');
+var socket = io('http://localhost:3000');
+//var socket = io('https://mahdichat.herokuapp.com/');
 var connected = false;
 var uid="";
+var uidBox = document.getElementById('myId');
 var joinDiv = document.getElementById('joinDiv');
 var el = document.getElementById('server-time');
 var userlist = document.getElementById('userListUL');
@@ -106,10 +107,25 @@ var message = document.getElementById('message');
 var chatlog = document.getElementById('chatlog');
 var sendMessageBtn = document.getElementById("sendMessageBtn");
 
+(function() {
+  uidBox.focus();
+
+  uidBox.addEventListener("keyup",function(event){
+  event.preventDefault();
+  if(event.keyCode===13){
+    connectToSocket()
+  }
+  });
+
+
+
+
+
+
 function connectToSocket(){
-  uid = document.getElementById('myId').value.trim();
-  if(uid.length<5) {
-    document.getElementById('joinError').innerHTML = 'Username should be at least 5 letters!';
+  uid = uidBox.value.trim();
+  if(uid.length<5 || uid.length > 20) {
+    document.getElementById('joinError').innerHTML = 'Username should be at between 5 and 20 characters!';
     return;
   }
 
@@ -161,19 +177,32 @@ function connectToSocket(){
 }
 
 function sendMessage(){
-  if(message.value.length==0 || !connected) return;
+  if(message.value.length==0 || message.value.length>200 || !connected) 
+  {
+        alert("massage should be maximum 200 characters");
+        return;
+  }
+ 
+
     var m = new Object();
     m.uid = uid;
     m.msg = message.value;
 
-    socket.emit('sendMessage',m);
+    socket.emit('sendMessage',m,function(data){
+      if(data){
+        var newmsg = document.createElement("p");
+        newmsg.innerHTML = "me: "+message.value;
+        chatlog.appendChild(newmsg);
+        message.value="";
+      }
+      else{
+        alert("massage should be maximum 200 characters");
+      }
 
-    var newmsg = document.createElement("p");
-    newmsg.innerHTML = "me: "+message.value;
-    chatlog.appendChild(newmsg);
+    });
 
-    message.value="";
+
 }
-
+})();
 
 </script>
