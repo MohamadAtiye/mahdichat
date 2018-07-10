@@ -73,17 +73,10 @@
         transition: all 1s;
       }
 
-          /* .hiddenChatChat{
-            width:100% !important;
-          }
-          .hiddenChatUsers{
-            left:-201px !important;
-          } */
-
-.hideUserlist_chat{
+.showUsers_chat{
   width:100% !important;
 }
-.hideUserlist_Users{
+.showUsers_users{
   left:-201px !important;
 }
 
@@ -110,22 +103,16 @@
         width: 100%;
         position: relative;
         left:0;
-        
+
         height: 100%;
         -webkit-transition: all 1s; /* Safari */
         transition: all 1s;
       }
-      /* .hiddenChatMobileShow{
-        left:0px !important;
-      }
-    .hiddenChatChatMobileMove{
-      left: 200px;
-    } */
 
-    .hideUserlist_chat{
+    .showUsers_chat{
       left:200px !important;
     }
-    .hideUserlist_Users{
+    .showUsers_users{
       left: 0px !important;
     }
     }
@@ -426,13 +413,13 @@ function connectToSocket(){
 
   showhidelist.addEventListener("click",function(event){
 
-      if(usersDiv.classList.contains("hideUserlist_Users")){
-        usersDiv.classList.remove("hideUserlist_Users");
-        chatarea.classList.remove("hideUserlist_chat");
+      if(usersDiv.classList.contains("showUsers_users")){
+        usersDiv.classList.remove("showUsers_users");
+        chatarea.classList.remove("showUsers_chat");
       }
       else{
-        usersDiv.classList.add("hideUserlist_Users");
-        chatarea.classList.add("hideUserlist_chat");
+        usersDiv.classList.add("showUsers_users");
+        chatarea.classList.add("showUsers_chat");
       }
 
   });
