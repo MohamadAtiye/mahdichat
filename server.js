@@ -16,35 +16,44 @@ const server = express()
 const io = socketIO(server);
 
 var currentUsers = [];
+var users = {};
 
 //handle socket events
 io.on('connection', (socket) => {
   console.log('Client connected');
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
     if(!socket.nickname)return;
-    currentUsers.splice(currentUsers.indexOf(socket.nickname),1);
+    delete users[socket.nickname];
     updateNicknames();
   });
 
   socket.on('userjoin', (data,callback)=>{
-    if(currentUsers.indexOf(data)!= -1 || data.length < 5 || data.length > 20)
+    if( data in users || data.length < 5 || data.length > 20)
     {
       callback(false);
     }
     else{
       callback(true);
       socket.nickname = data;
-      currentUsers.push(socket.nickname);
+      users[socket.nickname] = socket;
       updateNicknames();
     }
   });
 
   socket.on('sendMessage',(data,callback) => {
     console.log("got message");
+    data.msg = data.msg.trim();
     if(data.uid == socket.nickname && data.msg.length>0 && data.msg.length<201){
       callback(true);
-      socket.broadcast.emit('sendMessage',data);
+      if(data.msg.substring(0,3) === '/w '){
+          data.msg = data.msg.substring(3).trim();
+          console.log("whisper");
+      }
+      else{
+        socket.broadcast.emit('sendMessage',data);
+      }
     }
     else {
       console.log('fake user');
@@ -54,7 +63,7 @@ io.on('connection', (socket) => {
 
 
 function updateNicknames(){
-  io.sockets.emit("usernames",currentUsers);
+  io.sockets.emit("usernames",Object.keys(users));
 }
 
 
