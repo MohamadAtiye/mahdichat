@@ -47,10 +47,33 @@ io.on('connection', (socket) => {
     data.msg = data.msg.trim();
     if(data.uid == socket.nickname && data.msg.length>0 && data.msg.length<201){
       callback(true);
+
+      //is whisper?
       if(data.msg.substring(0,3) === '/w '){
           data.msg = data.msg.substring(3).trim();
-          console.log("whisper");
+          var ind = data.msg.indexOf(' ');
+          //check we have whiper name and message
+          if(ind!=-1){
+            var name = data.msg.substring(0,ind);
+            var msg = data.msg.substring(ind+1);
+            
+            //if target user exit
+            if(name in users){
+              data.uid = "(w) "+data.uid;
+              data.msg = msg;
+              users[name].emit('sendMessage',data);
+              console.log("whisper to "+name+" with msg: "+msg);
+            }
+            else{
+              callback(false);
+            }
+          }
+          //whisper without message
+          else{
+            callback(false);
+          }
       }
+      //else normal message
       else{
         socket.broadcast.emit('sendMessage',data);
       }
