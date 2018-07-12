@@ -56,7 +56,7 @@
         position: absolute;
         left:0;
         -webkit-transition: all 1s; /* Safari */
-        transition: all 1s;
+        transition: all 0.5s;
 
         background: white;
         z-index: 5;
@@ -70,7 +70,7 @@
         height: 100%;
         right: 0;
         -webkit-transition: all 1s; /* Safari */
-        transition: all 1s;
+        transition: all 0.5s;
       }
 
 .showUsers_chat{
@@ -95,7 +95,7 @@
         background: white;
         z-index: 5;
         -webkit-transition: all 1s; /* Safari */
-        transition: all 1s;
+        transition: all 0.5s;
       }
 
       #chatarea{
@@ -106,15 +106,15 @@
 
         height: 100%;
         -webkit-transition: all 1s; /* Safari */
-        transition: all 1s;
+        transition: all 0.5s;
       }
 
-    .showUsers_chat{
-      left:200px !important;
-    }
-    .showUsers_users{
-      left: 0px !important;
-    }
+      .showUsers_chat{
+        left:200px !important;
+      }
+      .showUsers_users{
+        left: 0px !important;
+      }
     }
 
 
@@ -139,6 +139,14 @@
       padding: 0;
       margin: 5px;
     }
+    #userlist ul li{
+      font-size: 20px;
+      padding: 5px;
+      cursor: pointer;
+    }
+    #userlist ul li:hover{
+      background: lightgray;
+    }
 
     #sendMessageDiv{
       /* height:50px; */
@@ -146,24 +154,30 @@
       bottom:0;
       position: absolute;
       width: calc(100% - 2px);
+      display: flex;
+    }
+    #sendTo{
+      flex: 1;
+      max-width: fit-content;
+      background: lightgreen;
+      font-size: 20px;
+      padding: 0 5px;
+      cursor: pointer;
     }
     #sendMessageBtn{
-      position: absolute;
-      bottom: 0;
-      right: 0;
       height: 29px;
-      width: 60px;
+      max-width: 60px;
+      flex:1;
     }
     #message{
-      width: calc(100% - 65px);
-      /* height: 100%; */
       font-size: 20px;
+      flex: 1;
     }
 
 
     #chatlog{
       overflow-y: scroll;
-      height: calc(100% - 51px);
+      height: calc(100% - 63px);
     }
     .message{
       display: block;
@@ -171,6 +185,21 @@
       margin: auto; 
       transition: all .5s;
       padding: 15px;
+    }
+
+    .userIOLine{
+      max-width: 50%;
+
+      color: black;
+      float: left;
+      clear: both;
+
+      padding: 10px 20px;
+      position: relative;
+
+      word-wrap: break-word;
+      margin-bottom: 20px;
+      font: 400 15px 'Open Sans', sans-serif;
     }
     .fromthem{
       max-width: 50%;
@@ -307,37 +336,43 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
-var socket = io('http://localhost:3000');
-//var socket = io('https://mahdichat.herokuapp.com/');
-var connected = false;
-var uid="";
-var uidBox = document.getElementById('myId');
-var joinDiv = document.getElementById('joinDiv');
-var el = document.getElementById('server-time');
-var usersDiv = document.getElementById("userlist");
-var userlist = document.getElementById('userListUL');
 
-var chatarea = document.getElementById("chatarea");
-var sendMessageDiv = document.getElementById('sendMessageDiv');
-var message = document.getElementById('message');
-var chatlog = document.getElementById('chatlog');
-var sendMessageBtn = document.getElementById("sendMessageBtn");
-var showhidelist = document.getElementById("showhidelist");
 
 var myApp = (function() {
-  uidBox.focus();
+    //var socket = io('http://localhost:3000');
+    var socket = io('https://mahdichat.herokuapp.com/');
 
-  uidBox.addEventListener("keyup",function(event){
-  event.preventDefault();
-  if(event.keyCode===13){
-    connectToSocket()
-  }
-  });
+    var connected = false;
+    var uid="";
+    var connectedUsers = {};
+    var uidBox = document.getElementById('myId');
+    var joinDiv = document.getElementById('joinDiv');
+    var el = document.getElementById('server-time');
+    var usersDiv = document.getElementById("userlist");
+    var userlist = document.getElementById('userListUL');
 
-  myIdBtn.addEventListener("click",function(event){
+    var chatarea = document.getElementById("chatarea");
+    var sendMessageDiv = document.getElementById('sendMessageDiv');
+    var message = document.getElementById('message');
+    var chatlog = document.getElementById('chatlog');
+    var sendMessageBtn = document.getElementById("sendMessageBtn");
+    var showhidelist = document.getElementById("showhidelist");
+
+
+  ///////////////////////////
+  //-- CHOOSING USERNAME --//
+  ///////////////////////////
+    uidBox.focus();
+    uidBox.addEventListener("keyup",function(event){
     event.preventDefault();
+    if(event.keyCode===13){
       connectToSocket()
-  });
+    }
+    });
+    myIdBtn.addEventListener("click",function(event){
+      event.preventDefault();
+        connectToSocket()
+    });
 
 
 
@@ -369,14 +404,56 @@ function connectToSocket(){
 
   socket.on('usernames', function(data) {
     userlist.innerHTML='';
+    connectedUsers = {};
     for(var i=0; i<data.length;i++){
+      connectedUsers[data[i]] = data[i];
       auser = document.createElement('li');
       auser.innerHTML = data[i];
+      auser.onclick = function(){
+        whisperTo(this.innerHTML);
+      }
       userlist.appendChild(auser);
 
       el.innerHTML = data.length + " Users Online";
     }
   });      
+
+  socket.on('newUserJoined', function(data) {
+    var newMSG = document.createElement('div');
+    newMSG.className = "message";
+    var newUserIO = document.createElement("div");
+    newUserIO.className = "userIOLine";
+    newUserIO.innerHTML = data + " joined the conversation";
+    newMSG.appendChild(newUserIO);
+    chatlog.appendChild(newMSG);
+  });
+
+  socket.on('userLeft', function(data) {
+    var newMSG = document.createElement('div');
+    newMSG.className = "message";
+    var newUserIO = document.createElement("div");
+    newUserIO.className = "userIOLine";
+    newUserIO.innerHTML = data + " left the conversation";
+    newMSG.appendChild(newUserIO);
+    chatlog.appendChild(newMSG);
+  });
+
+
+
+  //////////////////////////
+  //-- SENDING MESSAGES --//
+  //////////////////////////
+  function whisperTo(target){
+    $("#sendTo").remove();
+        var sendTo = document.createElement('div');
+        sendTo.id = "sendTo";
+        sendTo.innerHTML = "@"+target;
+        sendTo.onclick = function(){
+          $("#sendTo").remove();
+        }
+        sendMessageDiv.insertBefore(sendTo, sendMessageDiv.firstChild);
+        message.focus();
+  }
 
   socket.on('sendMessage', function(data) {
     console.log(data);
@@ -398,17 +475,47 @@ function connectToSocket(){
     scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
   });
 
-
+  var backSpaceCount=0;
   message.addEventListener("keyup",function(event){
     event.preventDefault();
     if(event.keyCode===13){
       sendMessage();
+      return;
+    }
+    
+    if(event.keyCode===8){
+      if($("#message").val().length==0)
+      {
+        backSpaceCount++;
+        if(backSpaceCount>1)
+        {
+          $("#sendTo").remove();
+          backSpaceCount=0;
+        }
+      }
+    }
+    else{backSpaceCount=0;}
+
+    if($("#message").val().charAt(0)==='@'){
+      var textmsg = $("#message").val().substring(1);//.trim();
+      var firstSpace = textmsg.indexOf(' ');
+      if(firstSpace>0)
+      {
+        var target = textmsg.substring(0,firstSpace);
+        if(target in connectedUsers)
+        {
+          whisperTo(target);
+          $("#message").val(
+            $("#message").val().substring(firstSpace+1).trim()
+          );
+        }
+      }
     }
   });
+
   sendMessageBtn.addEventListener("click",function(event){
     event.preventDefault();
       sendMessage();
-      message.focus();
   });
 
   showhidelist.addEventListener("click",function(event){
@@ -430,7 +537,6 @@ function connectToSocket(){
 function sendMessage(){
   if(message.value.length==0) return;
 
-
   if(message.value.length>200 || !connected) 
   {
         alert("massage should be maximum 200 characters");
@@ -442,6 +548,11 @@ function sendMessage(){
     m.uid = uid;
     m.msg = message.value;
 
+    if($("#sendTo").text())
+    {
+        m.target = $("#sendTo").text().substring(1);
+    }
+
     socket.emit('sendMessage',m,function(data){
       if(data){
 
@@ -451,16 +562,17 @@ function sendMessage(){
         var newFromThem = document.createElement("div");
         newFromThem.className = "fromme";
 
+        var target="";
+        if(m.target) target = " (to "+m.target+")"
         var newmsgText = document.createElement("p");
-        newmsgText.innerHTML = "me: <hr>"+message.value;
+        newmsgText.innerHTML = "me"+target+": <hr>"+message.value;
 
         newFromThem.appendChild(newmsgText);
         newMSG.appendChild(newFromThem);
         chatlog.appendChild(newMSG);
 
         $('#chatlog').animate({
-               scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
-
+        scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
         message.value="";
       }
       else{
@@ -469,7 +581,7 @@ function sendMessage(){
 
     });
 
-
+    message.focus();
 }
 })();
 

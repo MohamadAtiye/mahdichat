@@ -15,7 +15,6 @@ const server = express()
 //create socket server
 const io = socketIO(server);
 
-var currentUsers = [];
 var users = {};
 
 //handle socket events
@@ -25,11 +24,15 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected');
     if(!socket.nickname)return;
+
+    io.sockets.emit("userLeft",socket.nickname);
     delete users[socket.nickname];
     updateNicknames();
+    
   });
 
   socket.on('userjoin', (data,callback)=>{
+    
     if( data in users || data.length < 5 || data.length > 20)
     {
       callback(false);
@@ -39,6 +42,7 @@ io.on('connection', (socket) => {
       socket.nickname = data;
       users[socket.nickname] = socket;
       updateNicknames();
+      io.sockets.emit("newUserJoined",data);
     }
   });
 
@@ -49,34 +53,44 @@ io.on('connection', (socket) => {
       callback(true);
 
       //is whisper?
-      if(data.msg.substring(0,3) === '/w '){
-          data.msg = data.msg.substring(3).trim();
-          var ind = data.msg.indexOf(' ');
-          //check we have whiper name and message
-          if(ind!=-1){
-            var name = data.msg.substring(0,ind);
-            var msg = data.msg.substring(ind+1);
-            
-            //if target user exit
-            if(name in users){
-              data.uid = "(w) "+data.uid;
-              data.msg = msg;
-              users[name].emit('sendMessage',data);
-              console.log("whisper to "+name+" with msg: "+msg);
-            }
-            else{
-              callback(false);
-            }
-          }
-          //whisper without message
-          else{
-            callback(false);
-          }
+      if(data.target in users){
+        data.uid = "(whisper) "+data.uid;
+        users[data.target].emit('sendMessage',data);
+        console.log("whisper to "+data.uid+" with msg: "+data.msg);
       }
       //else normal message
       else{
         socket.broadcast.emit('sendMessage',data);
       }
+
+      // if(data.msg.charAt(0) === '@'){
+      //     //data.msg = data.msg.substring(3).trim();
+      //     var ind = data.msg.indexOf(' ');
+      //     //check we have whiper name and message
+      //     if(ind!=-1){
+      //       var name = data.msg.substring(1,ind);
+      //       var msg = data.msg.substring(ind+1);
+            
+      //       //if target user exit
+      //       if(name in users){
+      //         data.uid = "(w) "+data.uid;
+      //         data.msg = msg;
+      //         users[name].emit('sendMessage',data);
+      //         console.log("whisper to "+name+" with msg: "+msg);
+      //       }
+      //       else{
+      //         callback(false);
+      //       }
+      //     }
+      //     //whisper without message
+      //     else{
+      //       callback(false);
+      //     }
+      // }
+      // //else normal message
+      // else{
+      //   socket.broadcast.emit('sendMessage',data);
+      // }
     }
     else {
       console.log('fake user');
