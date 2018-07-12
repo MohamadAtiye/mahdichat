@@ -58,8 +58,8 @@
 
 
 var myApp = (function() {
-    // var socket = io('http://localhost:3000');
-    var socket = io('https://mahdichat.herokuapp.com/');
+    var socket = io('http://localhost:3000');
+    // var socket = io('https://mahdichat.herokuapp.com/');
 
     var connected = false;
     var uid="";
@@ -97,7 +97,9 @@ var myApp = (function() {
 
 
 
-
+  //////////////////////////
+  //-- STARTING SESSION --//
+  //////////////////////////
 function connectToSocket(){
   uid = uidBox.value.trim();
   if(uid.length<5 || uid.length > 20) {
@@ -120,6 +122,16 @@ function connectToSocket(){
   socket.on('time', function(timeString) {
     //el.innerHTML = 'Server time: ' + timeString;
   });  
+  socket.on('oldChat', function(oldChat) {
+    console.log(oldChat);
+    for(var i=oldChat.length-1;i>-1;i--){
+      displayChatMessage(
+        oldChat[i].cl_from, 
+        oldChat[i].cl_to, 
+        oldChat[i].cl_content 
+      );
+    }
+  });  
 
   socket.on('usernames', function(data) {
     userlist.innerHTML='';
@@ -133,7 +145,7 @@ function connectToSocket(){
       }
       userlist.appendChild(auser);
 
-      el.innerHTML = data.length + " Users Online";
+      el.innerHTML = uid+" , "+ data.length + " Users Online";
     }
   });      
 
@@ -175,22 +187,7 @@ function connectToSocket(){
   }
 
   socket.on('sendMessage', function(data) {
-
-    var newMSG = document.createElement('div');
-    newMSG.className = "message";
-
-    var newFromThem = document.createElement("div");
-    newFromThem.className = "fromthem";
-
-    var newmsgText = document.createElement("p");
-    newmsgText.innerHTML = data.uid+ "<hr>"+data.msg;
-
-    newFromThem.appendChild(newmsgText);
-    newMSG.appendChild(newFromThem);
-    chatlog.appendChild(newMSG);
-
-    $('#chatlog').animate({
-    scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
+    displayChatMessage(data.uid,data.target,data.msg);
   });
 
   var backSpaceCount=0;
@@ -248,59 +245,73 @@ function connectToSocket(){
       }
 
   });
-  
+
   message.focus();
 }
 
-function sendMessage(){
-  if(message.value.length==0) return;
 
-  if(message.value.length>200 || !connected) 
-  {
-        alert("massage should be maximum 200 characters");
-        return;
+  function displayChatMessage(from,to,content){
+    var msgRow = document.createElement('div');
+    msgRow.className = "message";
+
+    //from me or to me?
+    var msgHolder = document.createElement("div");
+    if(from == uid){
+      msgHolder.className = "fromme";
+      from = "me"
+    }
+    else{
+      msgHolder.className = "fromthem";
+    }
+    //is whisper?
+    var target="";
+    if(to){
+      if(to==uid){
+          target = " (whisper)";
+       }
+       else{
+          target = " (to "+to+")";
+       }
+    }
+    var msgText = document.createElement("p");
+    msgText.innerHTML = from + target+ "<hr>"+content;
+
+    msgHolder.appendChild(msgText);
+    msgRow.appendChild(msgHolder);
+    chatlog.appendChild(msgRow);
+
+    $('#chatlog').stop().animate({
+    scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
   }
- 
 
+
+  function sendMessage(){
+    if(message.value.length==0) return;
+
+    if(message.value.length>200 || !connected) 
+    {
+      alert("massage should be maximum 200 characters");
+      return;
+    }
     var m = new Object();
     m.uid = uid;
     m.msg = message.value;
-
     if($("#sendTo").text())
     {
-        m.target = $("#sendTo").text().substring(1);
+      m.target = $("#sendTo").text().substring(1);
     }
-
     socket.emit('sendMessage',m,function(data){
       if(data){
-
-        var newMSG = document.createElement('div');
-        newMSG.className = "message";
-
-        var newFromThem = document.createElement("div");
-        newFromThem.className = "fromme";
-
-        var target="";
-        if(m.target) target = " (to "+m.target+")"
-        var newmsgText = document.createElement("p");
-        newmsgText.innerHTML = "me"+target+": <hr>"+message.value;
-
-        newFromThem.appendChild(newmsgText);
-        newMSG.appendChild(newFromThem);
-        chatlog.appendChild(newMSG);
-
-        $('#chatlog').animate({
-        scrollTop: $('#chatlog')[0].scrollHeight}, "slow");
+        displayChatMessage(uid,m.target,m.msg);
         message.value="";
       }
       else{
         alert("server refused message");
       }
-
+      message.focus();
     });
+  }
 
-    message.focus();
-}
 })();
 
 </script>

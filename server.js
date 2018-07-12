@@ -42,6 +42,32 @@ function registerChat(from,to,content){
 }
 
 
+function getLastChat(uid, callback){
+  let db = new sqlite3.Database('./chatLog.db', sqlite3.OPEN_READWRITE, (err) => {
+    if (err) {
+      console.error(err.message);
+      return;
+    }
+
+    let sql = 'Select * from chatLogs WHERE cl_to = "'+ uid +'" OR cl_from = "'+ uid +'"  OR cl_to IS NULL  ORDER BY cl_time DESC limit 20;'
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+
+      if(callback) callback(rows);
+    });
+
+    db.close((err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+  });
+}
+
+
 
 
 
@@ -74,17 +100,22 @@ io.on('connection', (socket) => {
   });
 
   socket.on('userjoin', (data,callback)=>{
-    
     if( data in users || data.length < 5 || data.length > 20)
     {
       callback(false);
+      return;
     }
     else{
-      callback(true);
       socket.nickname = data;
       users[socket.nickname] = socket;
+
+      getLastChat(data,function(oldChat){
+        socket.emit('oldChat',oldChat);
+      });
+
+      callback(true);
       updateNicknames();
-      io.sockets.emit("newUserJoined",data);
+      socket.broadcast.emit("newUserJoined",data);
       console.log("newUserJoined ",data);
     }
   });
@@ -97,7 +128,6 @@ io.on('connection', (socket) => {
       var sender = data.uid;
       //is whisper?
       if(data.target in users){
-        data.uid = "(whisper) "+data.uid;
         users[data.target].emit('sendMessage',data);
       }
       //else normal message
@@ -105,16 +135,15 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('sendMessage',data);
         data.target = null;
       }
-
-
       registerChat(sender,data.target,data.msg);
-
     }
     else {
+      callback(false);
       console.log('fake user');
     }
   });
-});
+
+}); //--> END OF ON CONNECT
 
 function updateNicknames(){
   io.sockets.emit("usernames",Object.keys(users));
