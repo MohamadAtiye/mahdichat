@@ -45,7 +45,19 @@ let db = new sqlite3.Database('./chatLog.db', (err) => {
 
 
     /////CREATE TABLE
-    db.run("CREATE TABLE `chatLogs` (`cl_id`	INTEGER PRIMARY KEY AUTOINCREMENT,`cl_time`	INTEGER,`cl_from` TEXT,`cl_to`	TEXT,`cl_content` TEXT)");
+    // db.run("CREATE TABLE `chatLogs` (`cl_id`	INTEGER PRIMARY KEY AUTOINCREMENT,`cl_time`	INTEGER,`cl_from` TEXT,`cl_to`	TEXT,`cl_content` TEXT)");
+
+    db.run("CREATE TABLE `testLog` (      `cl_id`	INTEGER PRIMARY KEY AUTOINCREMENT,      `cl_time`	INTEGER,   `cl_from`	TEXT,      `cl_to`	TEXT,      `cl_content`	TEXT    );");
+
+
+// CREATE TABLE `testLog` (
+// 	`cl_id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+// 	`cl_time`	INTEGER,
+// 	`cl_from`	TEXT,
+// 	`cl_to`	TEXT,
+// 	`cl_content`	TEXT
+// );
+
 
     /////INSERT INTO TABLE
     // db.run("INSERT INTO chatLogs (cl_time,cl_from,cl_to,cl_content) VALUES (?,?,?,?)",

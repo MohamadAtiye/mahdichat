@@ -73,9 +73,28 @@ function getLastChat(uid, callback){
   });
 }
 
+const fs = require('fs');
+function initDatafile(){
+  fs.unlink('chatLog.db', (err) => {
+    if (err) console.log(err.message);
+    else console.log('####successfully deleted /tmp/hello');
 
+    // open the database
+    let db = new sqlite3.Database('./chatLog.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+      console.log('####created to the chatLog database.');
 
+      /////CREATE TABLE
+      db.run("CREATE TABLE `chatlogs` (      `cl_id`	INTEGER PRIMARY KEY AUTOINCREMENT,      `cl_time`	INTEGER,   `cl_from`	TEXT,      `cl_to`	TEXT,      `cl_content`	TEXT    );");
+      console.log('####created table chatlogs');
+    });
 
+  });
+}
+
+initDatafile();
 
 
 

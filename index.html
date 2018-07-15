@@ -60,8 +60,8 @@
 
 
 var myApp = (function() {
-    // var socket = io('http://localhost:3000');
-    var socket = io('https://mahdichat.herokuapp.com/');
+    var socket = io('http://localhost:3000');
+    // var socket = io('https://mahdichat.herokuapp.com/');
 
     var connected = false;
     var uid="";
@@ -157,7 +157,6 @@ var myApp = (function() {
       }
     else{ 
       socket.emit('userjoin',uid, function(data){
-        console.log(data);
         if(data.res==true){
           connected=true;
           $("#joinDiv").hide();
