@@ -15,7 +15,7 @@ const jqueryjs = path.join(__dirname, 'jquery.min.js');
 const server = express()
   // .use((req, res) => res.sendFile(INDEX))
   .get('/main.css', (req, res) => res.sendFile(MAINCSS))
-  .get('/jquery.js', (req, res) => res.sendFile(jqueryjs))
+  .get('/jquery.min.js', (req, res) => res.sendFile(jqueryjs))
   .get('/', (req, res) => res.sendFile(INDEX))
   .listen(PORT, () => console.log(`Listening on ${ PORT }`));
 
