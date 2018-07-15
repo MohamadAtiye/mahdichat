@@ -234,31 +234,31 @@ left:-201px !important;
 
   .fromme{
     max-width: 50%;
+    background:green;
+    color: white;
+    float: right;
+    clear: both;
 
-  background:green;
-  color: white;
-  float: right;
-  clear: both;
+    border-radius: 25px;
+    padding: 10px 20px;
+    position: relative;
 
-  border-radius: 25px;
-  padding: 10px 20px;
-  position: relative;
-
-  word-wrap: break-word;
-  margin-bottom: 20px;
-  font: 400 15px 'Open Sans', sans-serif;
+    word-wrap: break-word;
+    margin-bottom: 20px;
+    font: 400 15px 'Open Sans', sans-serif;
   }
+
   .fromme::before{
     content: "";
-  position: absolute;
-  z-index: 1;
-  bottom: -2px;
-  right: -8px;
-  height: 19px;
-  border-right: 20px solid green;
-  border-bottom-left-radius: 16px 14px;
-  -webkit-transform: translate(0, -2px);
-  transform: translate(0, -2px);
+    position: absolute;
+    z-index: 1;
+    bottom: -2px;
+    right: -8px;
+    height: 19px;
+    border-right: 20px solid green;
+    border-bottom-left-radius: 16px 14px;
+    -webkit-transform: translate(0, -2px);
+    transform: translate(0, -2px);
   }
   .fromme::after{
     content: "";
@@ -270,6 +270,49 @@ left:-201px !important;
     height: 20px;
     background: white;
     border-bottom-left-radius: 10px;
+    -webkit-transform: translate(-30px, -2px);
+    transform: translate(-30px, -2px);
+  }
+
+
+  .fromKing{
+    max-width: 50%;
+
+    background: red;
+    color: white;
+    float: left;
+    clear: both;
+
+    border-radius: 25px;
+    padding: 10px 20px;
+    position: relative;
+
+    word-wrap: break-word;
+    margin-bottom: 20px;
+    font: 400 15px 'Open Sans', sans-serif;
+  }
+  .fromKing::before{
+    content: "";
+    position: absolute;
+    z-index: 2;
+    bottom: -2px;
+    left: -7px;
+    height: 19px;
+    border-left: 20px solid red;
+    border-bottom-right-radius: 16px 14px;
+    -webkit-transform: translate(0, -2px);
+    transform: translate(0, -2px);
+  }
+  .fromKing::after{
+    content: "";
+    position: absolute;
+    z-index: 3;
+    bottom: -2px;
+    left: 4px;
+    width: 26px;
+    height: 20px;
+    background: white;
+    border-bottom-right-radius: 10px;
     -webkit-transform: translate(-30px, -2px);
     transform: translate(-30px, -2px);
   }

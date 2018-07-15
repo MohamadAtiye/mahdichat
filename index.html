@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>My Mega Chat</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+    <title>MidoKing's OPEN Chat App</title>
+    <script src="jquery.js" type="text/javascript"></script>
   </head>
 
   <link rel="stylesheet" href="main.css" type="text/css">
@@ -65,7 +65,6 @@ var myApp = (function() {
     var uid="";
     var connectedUsers = {};
     var uidBox = document.getElementById('myId');
-    var joinDiv = document.getElementById('joinDiv');
     var el = document.getElementById('server-time');
     var usersDiv = document.getElementById("userlist");
     var userlist = document.getElementById('userListUL');
@@ -78,102 +77,132 @@ var myApp = (function() {
     var showhidelist = document.getElementById("showhidelist");
 
 
+
+  //////////////////////////
+  //-- keyboard handles --//
+  //////////////////////////
+  var programStatus=0;
+  var backSpaceCount=0;
+  document.addEventListener("keyup",function(event){
+    event.preventDefault();
+    //if at username selection
+    if(programStatus==0){
+      if(event.keyCode===13){
+        registerName()
+      }        
+    }
+
+    //else if in chat
+    else if(programStatus==1){
+
+      //if sending message
+      if(event.keyCode===13){
+        sendMessage();
+      }
+      //if removing whisper
+      else if(event.keyCode===8){
+        if($("#message").val().length==0)
+        {
+          backSpaceCount++;
+          if(backSpaceCount>1)
+          {
+            $("#sendTo").remove();
+            backSpaceCount=0;
+          }
+        }
+      }
+      else{backSpaceCount=0;}
+
+      //if adding whisper
+      if($("#message").val().charAt(0)==='@'){
+        var textmsg = $("#message").val().substring(1);//.trim();
+        var firstSpace = textmsg.indexOf(' ');
+        if(firstSpace>0)
+        {
+          var target = textmsg.substring(0,firstSpace);
+          if(target in connectedUsers)
+          {
+            whisperTo(target);
+            $("#message").val(
+              $("#message").val().substring(firstSpace+1).trim()
+            );
+          }
+        }
+      }
+    }
+  }); //-- END OF KEY UP HANDLER
+
+
+
   ///////////////////////////
   //-- CHOOSING USERNAME --//
   ///////////////////////////
-    uidBox.focus();
-    uidBox.addEventListener("keyup",function(event){
+  uidBox.focus();
+  myIdBtn.addEventListener("click",function(event){
     event.preventDefault();
-    if(event.keyCode===13){
-      connectToSocket()
-    }
-    });
-    myIdBtn.addEventListener("click",function(event){
-      event.preventDefault();
-        connectToSocket()
-    });
-
-
-
-
-
-  //////////////////////////
-  //-- STARTING SESSION --//
-  //////////////////////////
-function connectToSocket(){
-  uid = uidBox.value.trim();
-  if(uid.length<5 || uid.length > 20) {
-    document.getElementById('joinError').innerHTML = 'Username should be at between 5 and 20 characters!';
-    uidBox.focus();
-    return;
-  }
-
-  socket.emit('userjoin',uid, function(data){
-    if(data){
-      connected=true;
-      joinDiv.remove();
-    }
-    else{
-      document.getElementById('joinError').innerHTML = 'Username already taken!';
-    }
+      registerName()
   });
 
+  function registerName(){
+    if(programStatus!=0) return;
 
-  socket.on('time', function(timeString) {
-    //el.innerHTML = 'Server time: ' + timeString;
-  });  
-  socket.on('oldChat', function(oldChat) {
-    console.log(oldChat);
-    for(var i=oldChat.length-1;i>-1;i--){
-      displayChatMessage(
-        oldChat[i].cl_from, 
-        oldChat[i].cl_to, 
-        oldChat[i].cl_content 
-      );
-    }
-  });  
+    uid = sanitizeHTML(uidBox.value);
 
-  socket.on('usernames', function(data) {
-    userlist.innerHTML='';
-    connectedUsers = {};
-    for(var i=0; i<data.length;i++){
-      connectedUsers[data[i]] = data[i];
-      auser = document.createElement('li');
-      auser.innerHTML = data[i];
-      auser.onclick = function(){
-        whisperTo(this.innerHTML);
+    if(uid.length<5 || uid.length > 20) {
+        $("#joinError").text('Username should be at between 5 and 20 characters!');
+        uid="";
+        uidBox.focus();
       }
-      userlist.appendChild(auser);
+    else{ 
+      socket.emit('userjoin',uid, function(data){
+        console.log(data);
+        if(data.res==true){
+          connected=true;
+          $("#joinDiv").hide();
+          programStatus=1;
 
-      el.innerHTML = uid+" , "+ data.length + " Users Online";
+          uid = data.uid;
+
+          for(var i=data.payload.length-1;i>-1;i--){
+            displayChatMessage(
+              data.payload[i].cl_from, 
+              data.payload[i].cl_to, 
+              data.payload[i].cl_content 
+            );
+          }
+          message.focus();
+        }
+        else{
+          uid="";
+          $("#joinError").text(data.msg);
+          uidBox.focus();
+          return;
+        }
+      });
     }
-  });      
-
-  socket.on('newUserJoined', function(data) {
-    var newMSG = document.createElement('div');
-    newMSG.className = "message";
-    var newUserIO = document.createElement("div");
-    newUserIO.className = "userIOLine";
-    newUserIO.innerHTML = data + " joined the conversation";
-    newMSG.appendChild(newUserIO);
-    chatlog.appendChild(newMSG);
-  });
-
-  socket.on('userLeft', function(data) {
-    var newMSG = document.createElement('div');
-    newMSG.className = "message";
-    var newUserIO = document.createElement("div");
-    newUserIO.className = "userIOLine";
-    newUserIO.innerHTML = data + " left the conversation";
-    newMSG.appendChild(newUserIO);
-    chatlog.appendChild(newMSG);
-  });
+  } //-- END OF registerName
 
 
 
   //////////////////////////
   //-- SENDING MESSAGES --//
   //////////////////////////
+
+  sendMessageBtn.addEventListener("click",function(event){
+    event.preventDefault();
+      sendMessage();
+  });
+  showhidelist.addEventListener("click",function(event){
+      if(usersDiv.classList.contains("showUsers_users")){
+        usersDiv.classList.remove("showUsers_users");
+        chatarea.classList.remove("showUsers_chat");
+      }
+      else{
+        usersDiv.classList.add("showUsers_users");
+        chatarea.classList.add("showUsers_chat");
+      }
+  });
+
   function whisperTo(target){
     $("#sendTo").remove();
         var sendTo = document.createElement('div');
@@ -186,68 +215,95 @@ function connectToSocket(){
         message.focus();
   }
 
-  socket.on('sendMessage', function(data) {
+  function sendMessage(){
+    if(programStatus!=1) return;
+
+    cleanText = sanitizeHTML(message.value);
+
+    if(cleanText.length==0) return;
+
+    if(cleanText.length>200) 
+    {
+      alert("message should be maximum 200 characters");
+      return;
+    }
+
+    if(!connected){
+      alert("cant reach server");
+      return;
+    }
+
+    var m = new Object();
+    m.uid = uid;
+    m.msg = cleanText;
+    if($("#sendTo").text())
+    {
+      m.target = $("#sendTo").text().substring(1);
+    }
+    socket.emit('messageSent',m,function(data){
+      if(data){
+        displayChatMessage(uid,m.target,m.msg);
+        message.value="";
+      }
+      else{
+        alert("server refused message");
+      }
+      message.focus();
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ////////////////////////////////
+  //-- SOCKET EVENTS RECEIVED --//
+  ////////////////////////////////
+  socket.on('usernames', function(data) {
+    userlist.innerHTML='';
+    connectedUsers = {};
+    for(var i=0; i<data.length;i++){
+      connectedUsers[data[i]] = data[i];
+      auser = document.createElement('li');
+      auser.innerHTML = data[i];
+      auser.onclick = function(){
+        whisperTo(this.innerHTML);
+      }
+      userlist.appendChild(auser);
+      el.innerHTML = uid+" , "+ data.length + " Users Online";
+    }
+  });  
+  socket.on('newUserJoined', function(data) {
+    var newMSG = document.createElement('div');
+    newMSG.className = "message";
+    var newUserIO = document.createElement("div");
+    newUserIO.className = "userIOLine";
+    newUserIO.innerHTML = data + " joined the conversation";
+    newMSG.appendChild(newUserIO);
+    chatlog.appendChild(newMSG);
+  });
+  socket.on('userLeft', function(data) {
+    var newMSG = document.createElement('div');
+    newMSG.className = "message";
+    var newUserIO = document.createElement("div");
+    newUserIO.className = "userIOLine";
+    newUserIO.innerHTML = data + " left the conversation";
+    newMSG.appendChild(newUserIO);
+    chatlog.appendChild(newMSG);
+  });
+  socket.on('messageReceived', function(data) {
     displayChatMessage(data.uid,data.target,data.msg);
   });
 
-  var backSpaceCount=0;
-  message.addEventListener("keyup",function(event){
-    event.preventDefault();
-    if(event.keyCode===13){
-      sendMessage();
-      return;
-    }
-    
-    if(event.keyCode===8){
-      if($("#message").val().length==0)
-      {
-        backSpaceCount++;
-        if(backSpaceCount>1)
-        {
-          $("#sendTo").remove();
-          backSpaceCount=0;
-        }
-      }
-    }
-    else{backSpaceCount=0;}
 
-    if($("#message").val().charAt(0)==='@'){
-      var textmsg = $("#message").val().substring(1);//.trim();
-      var firstSpace = textmsg.indexOf(' ');
-      if(firstSpace>0)
-      {
-        var target = textmsg.substring(0,firstSpace);
-        if(target in connectedUsers)
-        {
-          whisperTo(target);
-          $("#message").val(
-            $("#message").val().substring(firstSpace+1).trim()
-          );
-        }
-      }
-    }
-  });
-
-  sendMessageBtn.addEventListener("click",function(event){
-    event.preventDefault();
-      sendMessage();
-  });
-
-  showhidelist.addEventListener("click",function(event){
-
-      if(usersDiv.classList.contains("showUsers_users")){
-        usersDiv.classList.remove("showUsers_users");
-        chatarea.classList.remove("showUsers_chat");
-      }
-      else{
-        usersDiv.classList.add("showUsers_users");
-        chatarea.classList.add("showUsers_chat");
-      }
-
-  });
-
-  message.focus();
-}
 
 
   function displayChatMessage(from,to,content){
@@ -261,7 +317,12 @@ function connectToSocket(){
       from = "me"
     }
     else{
-      msgHolder.className = "fromthem";
+      if(from == "midoking"){
+        msgHolder.className = "fromKing";
+      }
+      else{
+        msgHolder.className = "fromthem";
+      }
     }
     //is whisper?
     var target="";
@@ -285,32 +346,17 @@ function connectToSocket(){
   }
 
 
-  function sendMessage(){
-    if(message.value.length==0) return;
+function sanitizeHTML(input){
+  input = input.trim();
+  input =  input.replace("&","&amp;");
+  input =  input.replace("<","&lt;");
+  input =  input.replace(">","&gt;");
+  input =  input.replace('"',"&quot;");
+  input =  input.replace("'","&#039;");
+  input =  input.replace("/","&#47;");
+  return input;
+}
 
-    if(message.value.length>200 || !connected) 
-    {
-      alert("massage should be maximum 200 characters");
-      return;
-    }
-    var m = new Object();
-    m.uid = uid;
-    m.msg = message.value;
-    if($("#sendTo").text())
-    {
-      m.target = $("#sendTo").text().substring(1);
-    }
-    socket.emit('sendMessage',m,function(data){
-      if(data){
-        displayChatMessage(uid,m.target,m.msg);
-        message.value="";
-      }
-      else{
-        alert("server refused message");
-      }
-      message.focus();
-    });
-  }
 
 })();
 
